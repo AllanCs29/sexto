@@ -1,53 +1,36 @@
 package com.example.routineapp.ui.theme
 
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-enum class ThemeVariant { OLIVE, ARENA, CARBON }
+enum class ThemeVariant(val label: String) { OLIVE("Olive"), ARENA("Arena"), CARBON("Carbón") }
 
-private fun oliveScheme(dark: Boolean) = if (dark) darkColorScheme(
-    primary = Olive, onPrimary = Color.White,
-    secondary = Sage,
-    background = Graphite, surface = Smoke,
-    onBackground = Color(0xFFECECEC), onSurface = Color(0xFFECECEC)
+private fun olive(dark: Boolean): ColorScheme = if (dark) darkColorScheme(
+    primary = Color(0xFF6B7D57), secondary = Color(0xFF889476), background = Color(0xFF121212), surface = Color(0xFF1A1A1A)
 ) else lightColorScheme(
-    primary = Olive, onPrimary = Color.White,
-    secondary = Sage,
-    background = Cloud, surface = Mist,
-    onBackground = Color(0xFF111111), onSurface = Color(0xFF111111)
+    primary = Color(0xFF6B7D57), secondary = Color(0xFF899B78), background = Color(0xFFF7F7F5), surface = Color(0xFFFFFFFF)
 )
-
-private fun arenaScheme(dark: Boolean) = if (dark) darkColorScheme(
-    primary = Stone, onPrimary = Color.White,
-    secondary = Dune,
-    background = Graphite, surface = Smoke,
-    onBackground = Color(0xFFECECEC), onSurface = Color(0xFFECECEC)
+private fun arena(dark: Boolean): ColorScheme = if (dark) darkColorScheme(
+    primary = Color(0xFF9A8C7A), secondary = Color(0xFFB9A995), background = Color(0xFF121212), surface = Color(0xFF1A1A1A)
 ) else lightColorScheme(
-    primary = Stone, onPrimary = Color.White,
-    secondary = Dune,
-    background = Cream, surface = Sand,
-    onBackground = Color(0xFF1A1918), onSurface = Color(0xFF1A1918)
+    primary = Color(0xFF9A8C7A), secondary = Color(0xFFC9BBA7), background = Color(0xFFFAF8F5), surface = Color(0xFFFFFFFF)
 )
-
-private fun carbonScheme(dark: Boolean) = if (dark) darkColorScheme(
-    primary = Slate, onPrimary = Color.White,
-    secondary = Silver,
-    background = Charcoal, surface = Slate,
-    onBackground = Color(0xFFECECEC), onSurface = Color(0xFFECECEC)
+private fun carbon(dark: Boolean): ColorScheme = if (dark) darkColorScheme(
+    primary = Color(0xFF5A5F66), secondary = Color(0xFF8B9199), background = Color(0xFF0E0F11), surface = Color(0xFF16181B)
 ) else lightColorScheme(
-    primary = Slate, onPrimary = Color.White,
-    secondary = Silver,
-    background = Color(0xFFF7F7F8), surface = Color(0xFFEDEFF1),
-    onBackground = Color(0xFF121314), onSurface = Color(0xFF121314)
+    primary = Color(0xFF5A5F66), secondary = Color(0xFF8B9199), background = Color(0xFFF5F6F7), surface = Color(0xFFFFFFFF)
 )
 
 @Composable
 fun RoutineTheme(variant: ThemeVariant, dark: Boolean, content: @Composable () -> Unit) {
-    val scheme = when (variant) {
-        ThemeVariant.OLIVE -> oliveScheme(dark)
-        ThemeVariant.ARENA -> arenaScheme(dark)
-        ThemeVariant.CARBON -> carbonScheme(dark)
+    val colors = when (variant) {
+        ThemeVariant.OLIVE -> olive(dark)
+        ThemeVariant.ARENA -> arena(dark)
+        ThemeVariant.CARBON -> carbon(dark)
     }
-    MaterialTheme(colorScheme = scheme, content = content)
+    MaterialTheme(colorScheme = colors, typography = androidx.compose.material3.Typography(), content = content)
 }
