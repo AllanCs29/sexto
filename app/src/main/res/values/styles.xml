@@ -1,4 +1,4 @@
 <resources>
-    <!-- Usa un estilo propio y hereda de Material3 -->
+    <!-- Nuestro tema base, hereda del tema Material3 DayNight de MDC -->
     <style name="Theme.RoutineApp" parent="Theme.Material3.DayNight.NoActionBar"/>
 </resources>
