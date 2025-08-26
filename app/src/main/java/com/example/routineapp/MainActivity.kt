@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package com.example.routineapp
 
 import android.content.Intent
@@ -14,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.routineapp.data.*
@@ -49,11 +52,12 @@ class MainActivity : ComponentActivity() {
                             Text(LocalDate.now().toString(), style = MaterialTheme.typography.labelSmall)
                         }
                     }, actions = {
-                        // Theme switchers
+                        // Tema claro/oscuro
                         TextButton(onClick = { dark = !dark; setThemeDark(ctx, dark) }) {
                             Text(if (dark) "Claro" else "Oscuro")
                         }
                         Spacer(Modifier.width(6.dp))
+                        // Variantes de tema (Oliva, Arena, Carbón)
                         var open by remember { mutableStateOf(false) }
                         Box {
                             Button(onClick = { open = !open }) { Text(variant.name) }
@@ -86,15 +90,14 @@ class MainActivity : ComponentActivity() {
                         Spacer(Modifier.height(8.dp))
 
                         when (tab) {
-                            Tab.HOY -> TodayTab(items,
+                            Tab.HOY -> TodayTab(
+                                items,
                                 onToggle = { idx, checked ->
                                     items = items.toMutableList().also { list ->
                                         list[idx] = list[idx].copy(done = checked)
                                     }
                                 },
-                                onAdd = { title, time ->
-                                    items = items + RoutineItem(title, time, false)
-                                },
+                                onAdd = { title, time -> items = items + RoutineItem(title, time, false) },
                                 onGenerate = { items = generateTodayPlan() },
                                 onSave = {
                                     saveItems(ctx, items)
@@ -106,9 +109,12 @@ class MainActivity : ComponentActivity() {
                             Tab.PESAS -> WeightsTab(exList = ex.ifEmpty { defaultWeightsPlan() },
                                 onUpdate = { ex = it; saveExercises(ctx, it) })
                             Tab.FUTBOL -> FootballTab()
-                            Tab.ESTUDIO -> StudyTabWithPomodoro(startService = { text ->
-                                ctx.startService(Intent(ctx, PomodoroService::class.java).putExtra("text", text))
-                            }, stopService = { ctx.stopService(Intent(ctx, PomodoroService::class.java)) })
+                            Tab.ESTUDIO -> StudyTabWithPomodoro(
+                                startService = { text ->
+                                    ctx.startService(Intent(ctx, PomodoroService::class.java).putExtra("text", text))
+                                },
+                                stopService = { ctx.stopService(Intent(ctx, PomodoroService::class.java)) }
+                            )
                             Tab.STATS -> StatsTab(history = loadHistory(ctx))
                         }
                     }
@@ -131,7 +137,6 @@ fun TodayTab(
     var search by remember { mutableStateOf("") }
     var sortAsc by remember { mutableStateOf(true) }
 
-    // Controls
     Row(verticalAlignment = Alignment.CenterVertically) {
         OutlinedTextField(title, { title = it }, label={ Text("Actividad") }, modifier=Modifier.weight(1f))
         Spacer(Modifier.width(8.dp))
@@ -139,7 +144,9 @@ fun TodayTab(
     }
     Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Button(onClick = { if (title.isNotBlank()) { onAdd(title.trim(), time.ifBlank { null }); title=""; time="" } }) { Text("Agregar") }
+        Button(onClick = {
+            if (title.isNotBlank()) { onAdd(title.trim(), time.ifBlank { null }); title=""; time="" }
+        }) { Text("Agregar") }
         Spacer(Modifier.width(8.dp))
         Button(onClick = onGenerate) { Text("Generar HOY") }
         Spacer(Modifier.width(8.dp))
@@ -163,14 +170,16 @@ fun TodayTab(
     Text("Progreso: $done/${items.size}", fontWeight = FontWeight.Bold)
 
     LazyColumn {
-        itemsIndexed(display) { idx, it ->
-            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp).border(1.dp, Color(0x33000000)).padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically) {
+        itemsIndexed(display) { _, it ->
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 8.dp).border(1.dp, Color(0x33000000)).padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(it.time ?: "—", modifier=Modifier.width(64.dp))
                 Spacer(Modifier.width(8.dp))
                 Checkbox(checked = it.done, onCheckedChange = { c ->
                     val originalIndex = items.indexOf(it)
-                    onToggle(originalIndex, c)
+                    if (originalIndex >= 0) onToggle(originalIndex, c)
                 })
                 Spacer(Modifier.width(8.dp))
                 Text(it.title)
@@ -205,8 +214,10 @@ fun WeightsTab(exList: List<Exercise>, onUpdate: (List<Exercise>) -> Unit) {
     Spacer(Modifier.height(8.dp))
     LazyColumn {
         itemsIndexed(exList) { idx, e ->
-            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp).border(1.dp, Color(0x33000000)).padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 8.dp).border(1.dp, Color(0x33000000)).padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Column(Modifier.weight(1f)) {
                     Text(e.name, fontWeight = FontWeight.SemiBold)
                     Text("${e.sets} x ${e.reps} reps")
@@ -279,7 +290,12 @@ fun FootballTab() {
 }
 
 @Composable
-fun StudyTabWithPomodoro(startService: (String) -> Unit, stopService: () -> Unit) {
+fun StudyTabWithPomodoro(
+    startService: (String) -> Unit,
+    stopService: () -> Unit
+) {
+    val ctx = LocalContext.current
+
     Text("Estudio — Pomodoro", fontWeight = FontWeight.Bold)
     Spacer(Modifier.height(8.dp))
     var work by remember { mutableStateOf(50) }  // minutes
@@ -307,7 +323,7 @@ fun StudyTabWithPomodoro(startService: (String) -> Unit, stopService: () -> Unit
                 remaining = 0
                 stopService()
                 Notifier.notify(
-                    androidx.compose.ui.platform.LocalContext.current,
+                    ctx,
                     if (onWork) "Descanso terminado" else "Bloque terminado",
                     if (onWork) "¡A estudiar!" else "Toma un descanso",
                     200
@@ -321,13 +337,19 @@ fun StudyTabWithPomodoro(startService: (String) -> Unit, stopService: () -> Unit
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("Trabajo (min)")
         Spacer(Modifier.width(6.dp))
-        OutlinedTextField(work.toString(), { v -> v.toIntOrNull()?.let { work = it.coerceIn(5,120) } },
-            modifier = Modifier.width(90.dp))
+        OutlinedTextField(
+            work.toString(),
+            { v -> v.toIntOrNull()?.let { work = it.coerceIn(5,120) } },
+            modifier = Modifier.width(90.dp)
+        )
         Spacer(Modifier.width(12.dp))
         Text("Descanso (min)")
         Spacer(Modifier.width(6.dp))
-        OutlinedTextField(rest.toString(), { v -> v.toIntOrNull()?.let { rest = it.coerceIn(1,60) } },
-            modifier = Modifier.width(90.dp))
+        OutlinedTextField(
+            rest.toString(),
+            { v -> v.toIntOrNull()?.let { rest = it.coerceIn(1,60) } },
+            modifier = Modifier.width(90.dp)
+        )
     }
     Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -362,7 +384,12 @@ fun StatsTab(history: List<DayHistory>) {
                 val pct = last14[i].let { if (it.total==0) 0f else it.done.toFloat()/it.total }
                 val x = i * step
                 val y = size.height * (1f - pct)
-                drawLine(Color(0xFF6B7D57), androidx.compose.ui.geometry.Offset(prevX, prevY), androidx.compose.ui.geometry.Offset(x, y), strokeWidth = 6f)
+                drawLine(
+                    Color(0xFF6B7D57),
+                    androidx.compose.ui.geometry.Offset(prevX, prevY),
+                    androidx.compose.ui.geometry.Offset(x, y),
+                    strokeWidth = 6f
+                )
                 prevX = x; prevY = y
             }
         }
@@ -376,7 +403,21 @@ fun StatsTab(history: List<DayHistory>) {
         val r = minOf(size.width, size.height) / 2.5f
         val center = androidx.compose.ui.geometry.Offset(size.width/2, size.height/2)
         val sweepDone = if (sumTotal==0) 0f else 360f * (sumDone.toFloat()/sumTotal)
-        drawArc(Color(0xFF6B7D57), startAngle = -90f, sweepAngle = sweepDone, useCenter = true, topLeft = center - androidx.compose.ui.geometry.Offset(r, r), size = androidx.compose.ui.geometry.Size(2*r, 2*r))
-        drawArc(Color(0xFFB0B3AD), startAngle = -90f + sweepDone, sweepAngle = 360f - sweepDone, useCenter = true, topLeft = center - androidx.compose.ui.geometry.Offset(r, r), size = androidx.compose.ui.geometry.Size(2*r, 2*r))
+        drawArc(
+            Color(0xFF6B7D57),
+            startAngle = -90f,
+            sweepAngle = sweepDone,
+            useCenter = true,
+            topLeft = center - androidx.compose.ui.geometry.Offset(r, r),
+            size = androidx.compose.ui.geometry.Size(2*r, 2*r)
+        )
+        drawArc(
+            Color(0xFFB0B3AD),
+            startAngle = -90f + sweepDone,
+            sweepAngle = 360f - sweepDone,
+            useCenter = true,
+            topLeft = center - androidx.compose.ui.geometry.Offset(r, r),
+            size = androidx.compose.ui.geometry.Size(2*r, 2*r)
+        )
     }
 }
