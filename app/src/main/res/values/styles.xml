@@ -1,3 +1,4 @@
 <resources>
-    <style name="Theme.Material3.DayNight.NoActionBar" parent="Theme.Material3.DayNight.NoActionBar"/>
+    <!-- Usa un estilo propio y hereda de Material3 -->
+    <style name="Theme.RoutineApp" parent="Theme.Material3.DayNight.NoActionBar"/>
 </resources>
