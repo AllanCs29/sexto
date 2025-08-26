@@ -1,0 +1,46 @@
+name: Build APK
+on:
+  push: { branches: ["main"] }
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: android-actions/setup-android@v3
+      - name: Install SDK components
+        run: |
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+          yes | sdkmanager --licenses
+      - name: Gradle wrapper
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.6-bin.zip
+          unzip -q gradle-8.6-bin.zip
+          ./gradle-8.6/bin/gradle wrapper --gradle-version 8.6 --distribution-type bin
+          chmod +x gradlew
+      - name: gradle.properties
+        run: |
+          cat > gradle.properties << 'EOF'
+          org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.enableJetifier=true
+          kotlin.code.style=official
+          EOF
+      - name: local.properties
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+      - name: Ensure debug keystore
+        run: |
+          mkdir -p ~/.android
+          if [ ! -f ~/.android/debug.keystore ]; then
+            keytool -genkeypair -v -keystore ~/.android/debug.keystore               -storepass android -alias androiddebugkey -keypass android               -keyalg RSA -keysize 2048 -validity 10000               -dname "CN=Android Debug,O=Android,C=US"
+          fi
+      - name: Build Debug
+        run: ./gradlew --no-daemon clean :app:assembleDebug
+      - uses: actions/upload-artifact@v4
+        with: { name: app-debug.apk, path: app/build/outputs/apk/debug/app-debug.apk }
+      - name: Build Release
+        run: ./gradlew --no-daemon :app:assembleRelease
+      - uses: actions/upload-artifact@v4
+        with: { name: app-release.apk, path: app/build/outputs/apk/release/app-release.apk }
