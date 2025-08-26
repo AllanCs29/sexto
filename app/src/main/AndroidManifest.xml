@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Permisos -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Recomendado en targetSdk 34 si usas foregroundServiceType="dataSync" -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:label="RoutineApp"
-        android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+        android:theme="@style/Theme.RoutineApp">
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -20,7 +24,7 @@
         <service
             android:name=".util.PomodoroService"
             android:exported="false"
-            android:foregroundServiceType="mediaProjection|dataSync|connectedDevice" />
+            android:foregroundServiceType="dataSync" />
 
         <receiver
             android:name=".util.BootReceiver"
@@ -42,5 +46,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/routine_widget_info" />
         </receiver>
+
     </application>
 </manifest>
